@@ -5,42 +5,35 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ConsumoAPI.Repositorio
 {
-    class UsuarioRepository
+    class PokemonRepository
     {
         HttpClient cliente = new HttpClient();
 
-        public UsuarioRepository()
+        public PokemonRepository()
         {
-            cliente.BaseAddress = new Uri("https://localhost:44381/");
+            cliente.BaseAddress = new Uri("https://pokeapi.co/api/v2/pokemon/");
             cliente.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
-        public async Task<List<Usuario>> GetUsuariosAsync()
+        public async Task<List<Pokemon2>> GetPokemonAsync(string nomePokemon)
         {
-            HttpResponseMessage response = await cliente.GetAsync("api/usuario/listarTreinadores");
-            if( response.IsSuccessStatusCode)
-            {
-                var dados = await response.Content.ReadAsStringAsync();
-                //return GetFirstInstance<string>("email", dados);
-                return JsonConvert.DeserializeObject<List<Usuario>>(dados);
-            }
-            return new List<Usuario>();
-        }
-        public async Task<List<string>> GetUsernameAsync()
-        {
-            List<string> lista = new List<string>();
-            HttpResponseMessage response = await cliente.GetAsync("api/usuario/listarTreinadores");
+            HttpResponseMessage response = await cliente.GetAsync($"{nomePokemon.ToLower()}/");
+            List<Pokemon2> listaPokemonResultado = new List<Pokemon2>();
+
             if (response.IsSuccessStatusCode)
             {
                 var dados = await response.Content.ReadAsStringAsync();
-                lista.Add(GetFirstInstance<string>("username", dados));
-                return lista;
-
+                Pokemon2 pokemonResultado = new Pokemon2();
+                var serializer = new JsonSerializer();
+                pokemonResultado = JsonConvert.DeserializeObject<Pokemon2>(dados);
+                listaPokemonResultado.Add(pokemonResultado);
+                return listaPokemonResultado;
             }
-            return lista;
+            return listaPokemonResultado;
         }
 
         public T GetFirstInstance<T>(string propertyName, string json)
@@ -56,13 +49,13 @@ namespace ConsumoAPI.Repositorio
                         jsonReader.Read();
 
                         var serializer = new JsonSerializer();
-                        return serializer.Deserialize<T>(jsonReader);
+                        var variavel =  serializer.Deserialize<T>(jsonReader);
+                        //var variavel = JsonConvert.DeserializeObject<T>(jsonReader.ReadAsString());
+                        return variavel;
                     }
                 }
                 return default(T);
             }
         }
     }
-
-
 }
